@@ -3,7 +3,9 @@
 #include <memory>
 #include <stdlib.h>
 
+#include "bubble_sort.h"
 #include "insert_sort.h"
+#include "select_sort.h"
 
 template<typename data_type>
 std::unique_ptr<data_type[]> generate(const size_t count)
@@ -77,6 +79,30 @@ public:
 	}
 };
 
+template<
+	typename data_type,
+	typename comparator_type = std::less<data_type>>
+class bubble_sort_dut
+{
+public:
+	void operator() (data_type *array, const size_t count, comparator_type &comparator)
+	{
+		return bubble_sort(array, count, comparator);
+	}
+};
+
+template<
+	typename data_type,
+	typename comparator_type = std::less<data_type>>
+class select_sort_dut
+{
+public:
+	void operator() (data_type *array, const size_t count, comparator_type &comparator)
+	{
+		return select_sort(array, count, comparator);
+	}
+};
+
 int main(int argc, char*argv[])
 {
 	using namespace std;
@@ -99,11 +125,17 @@ int main(int argc, char*argv[])
 		measure(_insert_sort_dut, _test_data_copy_wrapper.get(), count, _comparator, "Testing insertion sort...\n");
 	}
 	
-	// {
-		// auto _test_data_copy_wrapper = copy_array(test_data, count);
-		// auto _insert_sort_dut = insert_sort_dut<int>();
-		// measure(_insert_sort_dut, _test_data_copy_wrapper.get(), count, _comparator, "Testing insertion sort...\n");
-	// }
+	{
+		auto _test_data_copy_wrapper = copy_array(test_data, count);
+		auto _bubble_sort_dut = bubble_sort_dut<int>();
+		measure(_bubble_sort_dut, _test_data_copy_wrapper.get(), count, _comparator, "Testing bubble sort...\n");
+	}
+
+	{
+		auto _test_data_copy_wrapper = copy_array(test_data, count);
+		auto _select_sort_dut = select_sort_dut<int>();
+		measure(_select_sort_dut, _test_data_copy_wrapper.get(), count, _comparator, "Testing select sort...\n");
+	}
 
 	return 0;
 }
