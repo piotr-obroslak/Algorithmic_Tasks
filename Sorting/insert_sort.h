@@ -12,12 +12,10 @@ inline void insert_sort(
 	const size_t count,
 	comparator_type &comparator)
 {
-	if (count < 2)
-		return;
-	
 	for (auto i=1; i<count; i++)
-		for (auto j=i; j>0 && comparator(array[j],array[j-1]); j--)
-			std::swap(array[j], array[j-1]);
+		for (auto j=i; j>0 ; j--)
+			if (comparator(array[j],array[j-1]))
+				std::swap(array[j], array[j-1]);
 }
 
 #endif

@@ -12,7 +12,7 @@ void select_sort(
 	const size_t count,
 	comparator_type &comparator)
 {
-	if (count < 2)
+	if (count < 1)
 		return;
 
 	for (auto i=0; i<count-1; i++)

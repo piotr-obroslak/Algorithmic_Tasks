@@ -13,11 +13,9 @@ void bubble_sort(
 	comparator_type &comparator)
 {
 	for (auto i=0; i<count; i++)
-	{
 		for (auto j=count-1; j>i; j--)
 			if (!comparator(array[j-1], array[j]))
 				std::swap(array[j-1], array[j]);
-	}
 }
 
 #endif
