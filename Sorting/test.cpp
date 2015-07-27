@@ -45,7 +45,7 @@ inline void measure(dut_type &dut, data_type *array, const size_t count, compara
 
 	auto print_array_content = [](const data_type *array, const size_t count, const char *desc)
 	{
-		if (count > 20)
+		if (count > 50)
 			return;
 
 		cout << desc;
@@ -117,6 +117,18 @@ int main(int argc, char*argv[])
 	{
 		auto _test_data_copy_wrapper = copy_array(_test_data, _count);
 		auto _sort_test = sort_test<select_sort>();
+		measure(_sort_test, _test_data_copy_wrapper.get(), _count, _comparator);
+	}
+
+	{
+		auto _test_data_copy_wrapper = copy_array(_test_data, _count);
+		auto _sort_test = sort_test<merge_sort>();
+		measure(_sort_test, _test_data_copy_wrapper.get(), _count, _comparator);
+	}
+
+	{
+		auto _test_data_copy_wrapper = copy_array(_test_data, _count);
+		auto _sort_test = sort_test<quick_sort>();
 		measure(_sort_test, _test_data_copy_wrapper.get(), _count, _comparator);
 	}
 
