@@ -4,27 +4,28 @@
 #include <functional>
 #include <utility>
 
-template <
-	typename data_type,
-	typename comparator_type = std::less<data_type>>
-void select_sort(
-	data_type *array,
-	const size_t count,
-	comparator_type &comparator)
+class select_sort
 {
-	if (count < 1)
-		return;
-
-	for (auto i=0; i<count-1; i++)
+public:
+	static const char * name (void) { return "select sort"; }
+	
+	template<typename data_type, typename comparator_type = std::less<data_type>>
+	static void run(data_type *array, const size_t count, comparator_type &comparator)
 	{
-		auto min_idx = i;
+		if (count < 1)
+			return;
 
-		for (auto j=min_idx+1; j<count; j++)
-			if (!comparator(array[min_idx], array[j]))
-				min_idx = j;
+		for (auto i=0; i<count-1; i++)
+		{
+			auto min_idx = i;
 
-		std::swap(array[i], array[min_idx]);
+			for (auto j=min_idx+1; j<count; j++)
+				if (!comparator(array[min_idx], array[j]))
+					min_idx = j;
+
+			std::swap(array[i], array[min_idx]);
+		}
 	}
-}
+};
 
 #endif

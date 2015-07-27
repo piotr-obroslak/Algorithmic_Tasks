@@ -4,23 +4,26 @@
 #include <stdlib.h>
 
 #include "bubble_sort.h"
+#include "heap_sort.h"
 #include "insert_sort.h"
+#include "merge_sort.h"
+#include "quick_sort.h"
 #include "select_sort.h"
 
 template<typename data_type>
-std::unique_ptr<data_type[]> generate(const size_t count)
+std::unique_ptr<data_type[]> generate_random_array(const size_t count)
 {
 	auto test_data_wrapper = std::unique_ptr<data_type[]>(new data_type[count]);
 	auto test_data_array = test_data_wrapper.get();
-	
+
 	const auto rand_limit = 5*count;
 	const auto rand_offset = rand_limit/2;
 
 	srand(time(nullptr));
 	for (auto i=0; i<count; i++)
-		test_data_array[i] = (rand() % rand_limit) - rand_offset;
+		test_data_array[i] = static_cast<data_type>((rand() % rand_limit) - rand_offset);
 	
-	return test_data_wrapper;	
+	return test_data_wrapper;
 }
 
 template<typename data_type>
@@ -28,80 +31,60 @@ std::unique_ptr<data_type[]> copy_array(const data_type *array, const size_t cou
 {
 	auto test_data_copy_wrapper = std::unique_ptr<data_type[]>(new data_type[count]);
 	auto test_data_copy = test_data_copy_wrapper.get();
-	
+
 	for (auto i=0; i<count; i++)
 		test_data_copy[i] = array[i];
-	
+
 	return test_data_copy_wrapper;
 }
 
 template<typename data_type, typename comparator_type = std::less<data_type>, typename dut_type>
-inline void measure(dut_type &dut, data_type *array, const size_t count, comparator_type &comparator, const char *desc = nullptr)
+inline void measure(dut_type &dut, data_type *array, const size_t count, comparator_type &comparator)
 {
 	using namespace std;
-	
-	if (desc != nullptr)
-		cout << desc;
 
-	if (count < 20)
+	auto print_array_content = [](const data_type *array, const size_t count, const char *desc)
 	{
-		cout << "The input data is: ";
+		if (count > 20)
+			return;
+
+		cout << desc;
 		for (auto i=0; i<count; i++)
 			cout << array[i] << ", ";
 		cout << "\n";
-	}
-	
+	};
+
+	cout << "Testing " << dut.desc() << "\n";
+
+	print_array_content(array, count, "The input data is: ");
+
 	const auto t_begin = clock();
-	dut(array, count, comparator);
+	dut.run(array, count, comparator);
 	const auto t_end = clock();
 
-	if (count < 20)
-	{
-		cout << "The output data is: ";
-		for (auto i=0; i<count; i++)
-			cout << array[i] << ", ";
-		cout << "\n";
-	}
+	print_array_content(array, count, "The output data is: ");
 
 	const auto timespan = static_cast<double>(t_end - t_begin)/CLOCKS_PER_SEC;
 	cout << "it took " << timespan << " seconds.\n" << endl;
 }
 
 template<
-	typename data_type,
-	typename comparator_type = std::less<data_type>>
-class insert_sort_dut
+	typename algorithm_type>
+class sort_test
 {
 public:
-	void operator() (data_type *array, const size_t count, comparator_type &comparator)
+	const char * desc() const
 	{
-		return insert_sort(array, count, comparator);
+		return algorithm_type::name();
+	}
+	
+	template<typename data_type, typename comparator_type>
+	void run(data_type *array, const size_t count, comparator_type &comparator) const
+	{
+		return algorithm_type::run(array, count, comparator);
 	}
 };
 
-template<
-	typename data_type,
-	typename comparator_type = std::less<data_type>>
-class bubble_sort_dut
-{
-public:
-	void operator() (data_type *array, const size_t count, comparator_type &comparator)
-	{
-		return bubble_sort(array, count, comparator);
-	}
-};
-
-template<
-	typename data_type,
-	typename comparator_type = std::less<data_type>>
-class select_sort_dut
-{
-public:
-	void operator() (data_type *array, const size_t count, comparator_type &comparator)
-	{
-		return select_sort(array, count, comparator);
-	}
-};
 
 int main(int argc, char*argv[])
 {
@@ -113,28 +96,34 @@ int main(int argc, char*argv[])
 		return 1;
 	}
 	
-	const auto count = atoi(argv[1]);	
-	auto test_data_wrapper = generate<int>(count);
-	auto test_data = test_data_wrapper.get();
+	const auto _count = atoi(argv[1]);	
+	auto _test_data_wrapper = generate_random_array<int>(_count);
+	auto _test_data = _test_data_wrapper.get();
 	
 	auto _comparator = std::less<int>();
 	
 	{
-		auto _test_data_copy_wrapper = copy_array(test_data, count);
-		auto _insert_sort_dut = insert_sort_dut<int>();
-		measure(_insert_sort_dut, _test_data_copy_wrapper.get(), count, _comparator, "Testing insertion sort...\n");
-	}
-	
-	{
-		auto _test_data_copy_wrapper = copy_array(test_data, count);
-		auto _bubble_sort_dut = bubble_sort_dut<int>();
-		measure(_bubble_sort_dut, _test_data_copy_wrapper.get(), count, _comparator, "Testing bubble sort...\n");
+		auto _test_data_copy_wrapper = copy_array(_test_data, _count);
+		auto _sort_test = sort_test<insert_sort>();
+		measure(_sort_test, _test_data_copy_wrapper.get(), _count, _comparator);
 	}
 
 	{
-		auto _test_data_copy_wrapper = copy_array(test_data, count);
-		auto _select_sort_dut = select_sort_dut<int>();
-		measure(_select_sort_dut, _test_data_copy_wrapper.get(), count, _comparator, "Testing select sort...\n");
+		auto _test_data_copy_wrapper = copy_array(_test_data, _count);
+		auto _sort_test = sort_test<bubble_sort>();
+		measure(_sort_test, _test_data_copy_wrapper.get(), _count, _comparator);
+	}
+
+	{
+		auto _test_data_copy_wrapper = copy_array(_test_data, _count);
+		auto _sort_test = sort_test<select_sort>();
+		measure(_sort_test, _test_data_copy_wrapper.get(), _count, _comparator);
+	}
+
+	{
+		auto _test_data_copy_wrapper = copy_array(_test_data, _count);
+		auto _sort_test = sort_test<heap_sort>();
+		measure(_sort_test, _test_data_copy_wrapper.get(), _count, _comparator);
 	}
 
 	return 0;
