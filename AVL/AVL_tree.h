@@ -112,6 +112,7 @@ class AVLTree
 				while (it != end())
 				{
 					up = it.operator->();
+
 					const auto less = comparator(it->first, key);
 					const auto greeter = comparator(key, it->first);
 
@@ -135,7 +136,8 @@ class AVLTree
 				}
 
 				it.node->reset(new Node(up, keyval));
-				long ht = (*it.node)->ht;
+				auto the_new_one = (*it.node).get();
+				long ht = the_new_one->ht;
 				while (up != nullptr)
 				{
 					if (up->ht <= ht)
@@ -144,6 +146,85 @@ class AVLTree
 					}
 					up = up->up;
 				}
+#if 0
+				{
+					// TODO: height balancing
+					auto parent = the_new_one->up;
+					auto grand_parent = decltype(parent)(nullptr);
+
+					if (parent != nullptr)
+					{
+						grand_parent = parent->up;
+					}
+
+					if (grand_parent != nullptr)
+					{
+						const auto get_height = [](const Node * n) {
+							if (n != nullptr)
+							{
+								return n->ht;
+							}
+
+							return -1L;
+						};
+
+						const auto left_subtree_ht = get_height(grand_parent->left.get());
+						const auto right_subtree_ht = get_height(grand_parent->right.get());
+						std::cout << "left ht: " << left_subtree_ht << " right ht: " << right_subtree_ht << std::endl;
+
+						if (abs(left_subtree_ht - right_subtree_ht) == 2)
+						{
+							if (grand_parent->left != nullptr && grand_parent->left->left.get() == the_new_one)
+							{
+								// TODO: LL
+								auto grand_grand_parent = grand_parent->up;
+								if (grand_grand_parent != nullptr)
+								{
+									
+									//std::cout << "rotating" << std::endl;
+									// i.e. grand_parent is not the root
+									parent->up = grand_grand_parent;
+									grand_grand_parent->left.release();
+								   	grand_grand_parent->left.reset(parent);
+									--grand_grand_parent->ht;
+
+									grand_parent->up = parent;
+									grand_parent->ht = 0;
+									grand_parent->left.release();
+									parent->right.release();
+									parent->right.reset(grand_parent);
+									//parent->left.release();
+									//
+									
+								}
+								else
+								{
+									//std::cout << "grand parent is the root, rotation" << std::endl;
+									parent->up = nullptr;
+									auto _r = root.release();
+									root.reset(parent);
+
+									grand_parent->left.release();
+									grand_parent->up = parent;
+									grand_parent->ht = 0;
+									parent->right.reset(grand_parent);
+								}
+							}
+						}
+						{
+							// TODO: LR
+						}
+						{
+							// TODO: RL
+						}
+						{
+							// TODO: RR
+						}
+					}
+
+				}
+
+#endif
 
 				return std::make_pair(it, true);
 			}
