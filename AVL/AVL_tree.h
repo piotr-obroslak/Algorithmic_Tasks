@@ -134,9 +134,6 @@ std::pair<typename AVLTree<_Kty, _Ty, _Pr>::Iterator, bool> AVLTree<_Kty, _Ty, _
 {
 	try 
 	{
-		//std::cout << "inside insert" << std::endl;
-
-
 		const auto & key = keyval.first;
 		const auto & val = keyval.second;
 
@@ -174,53 +171,6 @@ std::pair<typename AVLTree<_Kty, _Ty, _Pr>::Iterator, bool> AVLTree<_Kty, _Ty, _
 	{
 		throw Exception(e.what());
 	}
-/*
-	if (root == nullptr)
-	{
-		root.reset(new Node(keyval));
-		return std::make_pair(begin(), true);
-	}
-	else
-	{
-		const auto comparator = key_compare();
-
-		Node * p = nullptr;
-		Node * n = root.get();
-		while (n != nullptr)
-		{
-			if (comparator(n->key, key))
-			{
-				p = n;
-				n = n->right.get();
-			}
-			else if (comparator(key, n->key))
-			{
-				p = n;
-				n = n->left.get();
-			}
-			else
-			{
-				return std::make_pair(Iterator(n), false);
-			}
-		}
-
-
-		if (p != nullptr)
-		{
-			if (comparator(p->key, key))
-			{
-				p->right.reset(new Node(keyval));
-			}
-			else if (comparator(key, p->key))
-			{
-				p->left.reset(new Node(keyval));
-			}
-
-			return std::make_pair(Iterator(p), true);
-		}
-	}
-*/
-	return std::make_pair(end(), false);	// TODO: that's a failed-to-create-a-node exception
 }
 
 template<typename _Kty, typename _Ty, typename _Pr>
