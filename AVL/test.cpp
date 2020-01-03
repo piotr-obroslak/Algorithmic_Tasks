@@ -33,7 +33,7 @@ int main(int argc, char * argv[])
 		const auto max_size = 100000;
 		const auto size = (argc == 1) ? rand() % max_size : atoi(argv[1]);
 
-		std::cout << "creating a random AVL tree with " << size << " nodes...\n";
+		std::cout << "creating a random AVL tree with " << size << " nodes..." << std::endl;
 
 		for (auto i = 0; i<size; i++)
 		{
@@ -68,7 +68,7 @@ int main(int argc, char * argv[])
 	class DotWritter
 	{
 		public:
-			DotWritter(const TestTree & tr)
+			DotWritter(TestTree & tr)
 				: t(tr)
 				, dot("test.dot")
 			{
@@ -82,6 +82,8 @@ int main(int argc, char * argv[])
 
 			void operator()(TestTree::Iterator it)
 			{
+				//std::cout << "consuming" << it << std::endl;
+
 				dot << '\t' << it << '[' <<  "label=" << '\"' << it->first << "\\n" << it->second << '\"' << ']' << '\n';
 				add_edge(it, t.left(it));
 				add_edge(it, t.right(it));
@@ -96,7 +98,7 @@ int main(int argc, char * argv[])
 				}
 			};
 
-			const TestTree & t;
+			TestTree & t;
 			std::ofstream dot;
 	} writer(t);
 	
