@@ -21,17 +21,23 @@ class AVLTree
 			public:
 				const key_type & first = key;
 				mapped_type & second = val;
+				
+				long height() const { return ht; }
+				const Node * parent() const { return up; }
 
 			private:
-				Node(const value_type & keyval)
-					: key(keyval.first), val(keyval.second)	{}
+				Node(Node * p, const value_type & keyval)
+					: up(p), key(keyval.first), val(keyval.second), ht(0) {}
 
 			private:
 				const key_type key;
 				mapped_type val;
+				long ht;
 
 				std::unique_ptr<Node> left;
 				std::unique_ptr<Node> right;
+
+				Node * up;
 		};
 
 		std::unique_ptr<Node> root;
@@ -92,14 +98,67 @@ class AVLTree
 		AVLTree()
 			: root(nullptr), toor(nullptr) {}
 
-		std::pair<Iterator, bool> insert(const value_type & keyval);
+		std::pair<Iterator, bool> insert(const value_type & keyval)
+		{
+			try 
+			{
+				const auto & key = keyval.first;
+				const auto & val = keyval.second;
+
+				const auto comparator = key_compare();
+
+				Node * up = nullptr;
+				Iterator it = begin();
+				while (it != end())
+				{
+					up = it.operator->();
+					const auto less = comparator(it->first, key);
+					const auto greeter = comparator(key, it->first);
+
+					if (less && greeter)
+					{
+						throw Exception("invalid comparator!");
+					}
+
+					if (less)
+					{
+						it = right(it);
+					}
+					else if (greeter)
+					{
+						it = left(it);
+					}
+					else
+					{
+						return std::make_pair(it, false);
+					}
+				}
+
+				it.node->reset(new Node(up, keyval));
+				long ht = (*it.node)->ht;
+				while (up != nullptr)
+				{
+					if (up->ht <= ht)
+					{
+						ht = ++up->ht;
+					}
+					up = up->up;
+				}
+
+				return std::make_pair(it, true);
+			}
+			catch (std::exception & e)
+			{
+				throw Exception(e.what());
+			}
+		}
+
 		//Iterator find(const key_type & key);
 		Iterator begin() { return Iterator(this, root); }
 		Iterator end() { return Iterator(this, toor); }
 
 		Iterator left(Iterator it) const { return Iterator(this, it->left); }
 		Iterator right(Iterator it) const { return Iterator(this, it->right); }
-
 		
 		template<typename _Visitor>
 		void traverse_in_order(_Visitor & consumer)
@@ -128,65 +187,4 @@ class AVLTree
 			traverse_in_order_recursively(Iterator(this, n->right), consumer);
 		}
 };
-
-template<typename _Kty, typename _Ty, typename _Pr>
-std::pair<typename AVLTree<_Kty, _Ty, _Pr>::Iterator, bool> AVLTree<_Kty, _Ty, _Pr>::insert(const value_type & keyval)
-{
-	try 
-	{
-		const auto & key = keyval.first;
-		const auto & val = keyval.second;
-
-		const auto comparator = key_compare();
-
-		Iterator it = begin();
-		while (it != end())
-		{
-				const auto less = comparator(it->first, key);
-				const auto greeter = comparator(key, it->first);
-
-				if (less && greeter)
-				{
-					throw Exception("invalid comparator!");
-				}
-
-				if (less)
-				{
-					it = right(it);
-				}
-				else if (greeter)
-				{
-					it = left(it);
-				}
-				else
-				{
-					return std::make_pair(it, false);
-				}
-		}
-
-		it.node->reset(new Node(keyval));
-		return std::make_pair(it, true);
-	}
-	catch (std::exception & e)
-	{
-		throw Exception(e.what());
-	}
-}
-
-template<typename _Kty, typename _Ty, typename _Pr>
-std::ostream& operator<<(std::ostream & o, typename AVLTree<_Kty, _Ty, _Pr>::Iterator & it)
-{
-	// TOOD: the itretor must be valid
-	const auto key = it->first;
-
-	o << 'N';
-	if (key < 0)
-	{
-		o << '_';
-	}
-
-	o << abs(key);
-	
-	return o;
-}
 

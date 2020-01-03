@@ -4,7 +4,6 @@
 
 using TestTree = AVLTree<int, std::string>;
 
-
 static std::ostream& operator<<(std::ostream & o, TestTree::Iterator & it)
 {
 	// TOOD: the itretor must be valid
@@ -83,10 +82,18 @@ int main(int argc, char * argv[])
 			void operator()(TestTree::Iterator it)
 			{
 				//std::cout << "consuming" << it << std::endl;
-
-				dot << '\t' << it << '[' <<  "label=" << '\"' << it->first << "\\n" << it->second << '\"' << ']' << '\n';
-				add_edge(it, t.left(it));
-				add_edge(it, t.right(it));
+				if (it != t.end())
+				{
+					dot << '\t' << it << '[' <<  "label=" << '\"' << it->first << "\\n" << it->second ;
+					//auto parent = it->parent();
+					//if (parent != nullptr)
+					//{
+						dot << "\\n" << it->height();
+					//}
+				   	dot << '\"' << ']' << '\n';
+					add_edge(it, t.left(it));
+					add_edge(it, t.right(it));
+				}
 			}
 
 		private:
