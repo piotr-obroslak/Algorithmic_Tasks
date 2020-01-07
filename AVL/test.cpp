@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include "AVL_tree.h"
 
 using TestTree = AVLTree<int, std::string>;
@@ -23,58 +24,26 @@ static std::ostream& operator<<(std::ostream & o, TestTree::Iterator & it)
 
 int main(int argc, char * argv[])
 {
-	TestTree t;
-
-	srand(time(0));
-
-	if (argc < 3)
-	{
-		const auto max_size = 100000;
-		const auto size = (argc == 1) ? rand() % max_size : atoi(argv[1]);
-
-		std::cout << "creating a random AVL tree with " << size << " nodes..." << std::endl;
-
-		for (auto i = 0; i<size; i++)
-		{
-			const auto key = rand() % (4 * size) - (2 * size);
-			std::string val;
-			{
-				const auto val_len = rand() % 5 + 1;
-				for (auto c = 0; c < val_len; c++)
-				{
-					val.push_back(rand() % ('z'-'a') + 'a');
-				}
-			}
-			t.insert({key, val});
-		}
-
-		std::cout << "done!" << std::endl;
-	}
-	else
-	{
-		std::cout << "creating an AVL tree from the " << (argc - 1) / 2 << " specified nodes...\n";
-
-		for (auto i = 0; i<argc/2; i++)
-		{
-			const auto key = atoi(argv[2*i+1]);
-			const auto val = std::string(argv[2*i+2]);
-			t.insert({key, val});
-		}
-
-		std::cout << "done!" << std::endl;
-	}
-
-	class DotWritter
+	class NodeDumper
 	{
 		public:
-			DotWritter(TestTree & tr)
+			void operator()(TestTree::Iterator it)
+			{
+				std::cout << '{' <<it->first << ',' << it->second << '}' << ", ";
+			}
+	};
+
+	class DotWriter
+	{
+		public:
+			DotWriter(TestTree & tr, const char * fname = "test.dot")
 				: t(tr)
-				, dot("test.dot")
+				, dot(fname)
 			{
 				dot << "digraph testAVL {\n";
 			}
 
-			~DotWritter()
+			~DotWriter()
 			{
 				dot << "}\n";
 			}
@@ -107,20 +76,64 @@ int main(int argc, char * argv[])
 
 			TestTree & t;
 			std::ofstream dot;
-	} writer(t);
+	};
 	
-	class NodeDumper
+	try
 	{
-		public:
-			void operator()(TestTree::Iterator it)
-			{
-				std::cout << '{' <<it->first << ',' << it->second << '}' << ", ";
-			}
-	} dumper;
 
-	t.traverse_in_order(dumper);
-	t.traverse_in_order(writer);
-	std::cout << std::endl;
+		TestTree t;
+
+		srand(time(0));
+
+		if (argc < 3)
+		{
+			const auto max_size = 100000;
+			const auto size = (argc == 1) ? rand() % max_size : atoi(argv[1]);
+
+			std::cout << "creating a random AVL tree with " << size << " nodes..." << std::endl;
+
+			for (auto i = 0; i<size; i++)
+			{
+				const auto key = rand() % (4 * size) - (2 * size);
+				std::string val;
+				{
+					const auto val_len = rand() % 5 + 1;
+					for (auto c = 0; c < val_len; c++)
+					{
+						val.push_back(rand() % ('z'-'a') + 'a');
+					}
+				}
+				t.insert({key, val});
+			}
+
+			std::cout << "done!" << std::endl;
+		}
+		else
+		{
+			std::cout << "creating an AVL tree from the " << (argc - 1) / 2 << " specified nodes...\n";
+
+			for (auto i = 0; i<argc/2; i++)
+			{
+				const auto key = atoi(argv[2*i+1]);
+				const auto val = std::string(argv[2*i+2]);
+				t.insert({key, val});
+
+				std::stringstream fname; fname << "test" << i << ".dot";
+				DotWriter w(t, fname.str().c_str());
+				t.traverse_in_order(w);
+			}
+
+			std::cout << "done!" << std::endl;
+		}
+
+		//t.traverse_in_order(dumper);
+		//t.traverse_in_order(writer);
+		//std::cout << std::endl;
+	}
+	catch (const TestTree::Exception & e)
+	{
+		std::cout << "FAILURE: " << e.what() << std::endl;
+	}
 
 	return 0;
 }

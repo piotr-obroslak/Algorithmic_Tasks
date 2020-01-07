@@ -12,6 +12,7 @@ class AVLTree
 		using value_type = std::pair<key_type, mapped_type>;
 		using key_compare = _Pr;
 
+		class Iterator;
 	protected:
 		class Node
 		{
@@ -23,7 +24,7 @@ class AVLTree
 				mapped_type & second = val;
 				
 				long height() const { return ht; }
-				const Node * parent() const { return up; }
+				//const Node * parent() const { return up; }
 
 			private:
 				Node(Node * p, const value_type & keyval)
@@ -148,80 +149,113 @@ class AVLTree
 				}
 #if 0
 				{
-					// TODO: height balancing
-					auto parent = the_new_one->up;
-					auto grand_parent = decltype(parent)(nullptr);
+					// TODO: height balancing - traverse the tree up (to the very root in extreme
+					// case to see if any node on the traverse path got disbalanced after the 
+					// insertion)
 
-					if (parent != nullptr)
+					const auto get_height =
+						[](const Node * n) { return (n != nullptr) ? n->ht : -1L; };
+
+					auto up = the_new_one->up;
+					while (up != nullptr)
 					{
-						grand_parent = parent->up;
-					}
+						auto l = up->left.get();
+						auto r = up->right.get();
+						const auto l_ht = get_height(l);
+						const auto r_ht = get_height(r);
+						const auto d_ht = abs(l_ht -  r_ht);
 
-					if (grand_parent != nullptr)
-					{
-						const auto get_height = [](const Node * n) {
-							if (n != nullptr)
+						if (d_ht < 2)
+						{
+						}
+						else if (d_ht == 2)
+						{
+							// TODO: balance the node
+
+							auto myself = up;
+
+							std::cout << "myself: " << "{" << myself->first << "," << myself->second << "}" << std::endl;
+							std::cout << "left ht: " << l_ht << " right ht: " << r_ht << std::endl;
+
+							if (l_ht > r_ht)
 							{
-								return n->ht;
+
+								std::cout << "left child:" << "{" << l->first << "," << l->second << "}" << std::endl;
+
+								auto ll = l->left.get();
+								auto lr = l->right.get();
+								const auto ll_ht = get_height(ll);
+								const auto lr_ht = get_height(lr);
+
+								std::cout << "left left ht: " << ll_ht << " left right ht: " << lr_ht << std::endl;
+
+								if (ll_ht > lr_ht)
+								{
+									auto upup = myself->up;
+
+									l->up = upup;
+
+									if (upup == nullptr)
+									{
+										std::cout << "we're @ root" << std::endl;
+										l->right.release();
+										l->right.reset(myself);
+										myself->up = l;
+
+										root.release();
+										root.reset(l);
+
+										l->up = upup;
+
+										myself->left.release();
+
+										std::cout << "it is not about rotation" << std::endl;
+									}
+									else
+									{
+										upup->left.release();	// TODO: wr're not sure if that's left or right
+										upup->left.reset(l);
+									}
+
+									/*up->up = child;
+									auto r = child->right.release();
+									child->right.reset(up);
+
+									r->up = up;
+									up->left.release();
+									up->left.reset(r);
+									up->ht = std::max(get_height(up->left.get()), get_height(up->right.get())) + 1;
+									child->ht = std::max(get_height(child->left.get()), get_height(child->right.get())) + 1;
+									upup->ht = std::max(get_height(upup->left.get()), get_height(upup->right.get())) + 1;
+*/
+								}
+								else if (lr_ht > ll_ht)
+								{
+								}
 							}
-
-							return -1L;
-						};
-
-						const auto left_subtree_ht = get_height(grand_parent->left.get());
-						const auto right_subtree_ht = get_height(grand_parent->right.get());
-						std::cout << "left ht: " << left_subtree_ht << " right ht: " << right_subtree_ht << std::endl;
-
-						if (abs(left_subtree_ht - right_subtree_ht) == 2)
-						{
-							if (grand_parent->left != nullptr && grand_parent->left->left.get() == the_new_one)
+							else if (r_ht > l_ht)
 							{
-								// TODO: LL
-								auto grand_grand_parent = grand_parent->up;
-								if (grand_grand_parent != nullptr)
-								{
-									
-									//std::cout << "rotating" << std::endl;
-									// i.e. grand_parent is not the root
-									parent->up = grand_grand_parent;
-									grand_grand_parent->left.release();
-								   	grand_grand_parent->left.reset(parent);
-									--grand_grand_parent->ht;
+								const auto rl_ht = get_height(up->right->left.get());
+								const auto rr_ht = get_height(up->right->right.get());
 
-									grand_parent->up = parent;
-									grand_parent->ht = 0;
-									grand_parent->left.release();
-									parent->right.release();
-									parent->right.reset(grand_parent);
-									//parent->left.release();
-									//
-									
+								if (rl_ht > rr_ht)
+								{
 								}
-								else
+								else if (rr_ht > rl_ht)
 								{
-									//std::cout << "grand parent is the root, rotation" << std::endl;
-									parent->up = nullptr;
-									auto _r = root.release();
-									root.reset(parent);
-
-									grand_parent->left.release();
-									grand_parent->up = parent;
-									grand_parent->ht = 0;
-									parent->right.reset(grand_parent);
 								}
 							}
+							
+							break;
 						}
+						else
 						{
-							// TODO: LR
+							// TODO: I'll uncomment once I'm sure the tree is balanced
+							//throw Exception("something overseen!");
 						}
-						{
-							// TODO: RL
-						}
-						{
-							// TODO: RR
-						}
-					}
 
+						up = up->up;
+					}
 				}
 
 #endif
