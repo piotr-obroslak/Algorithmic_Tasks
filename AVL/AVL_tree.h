@@ -173,7 +173,16 @@ class AVLTree
 		}
 
 	protected:
+		long get_height (const Node * top)
+		{
+			return (top != nullptr) ? top->ht : -1L;
+		};
+
 		void rotate_left(Node * top)
+		{
+		}
+
+		void rotate_right(Node * top)
 		{
 			auto upup = top->up;
 			auto l = top->left.get();
@@ -183,24 +192,34 @@ class AVLTree
 			if (upup == nullptr)
 			{
 				std::cout << "we're @ root" << std::endl;
-				l->right.release();
-				l->right.reset(top);
-				top->up = l;
-
 				root.release();
 				root.reset(l);
-
-				l->up = upup;
-
-				top->left.release();
-
-				std::cout << "it is not about rotation" << std::endl;
 			}
 			else
 			{
+				std::cout << "we're not @ root" << std::endl;
 				upup->left.release();	// TODO: wr're not sure if that's left or right
 				upup->left.reset(l);
 			}
+			
+			l->right.release();
+			l->right.reset(top);
+			top->up = l;
+
+			l->up = upup;
+
+			top->left.release();
+
+			std::cout << "it is not about rotation" << std::endl;
+
+			
+			top->ht = std::max(get_height(top->left.get()), get_height(top->right.get())) + 1;
+			l->ht = std::max(get_height(l->left.get()), get_height(l->right.get())) + 1;
+			if (upup != nullptr)
+			{
+				upup->ht = std::max(get_height(upup->left.get()), get_height(upup->right.get())) + 1;
+			}
+			
 
 			/*up->up = child;
 			auto r = child->right.release();
@@ -215,13 +234,9 @@ class AVLTree
 */
 		}
 
-		void rotate_right(Node * top)
-		{
-		}
-
 		void balance(Node * leaf)
 		{
-			return;
+			//return;
 
 			// NOTE: it is assumed this method is only called for newly added leaf nodes
 
@@ -229,8 +244,6 @@ class AVLTree
 			// case to see if any node on the traverse path got disbalanced after the 
 			// insertion)
 
-			const auto get_height =
-				[](const Node * n) { return (n != nullptr) ? n->ht : -1L; };
 
 			auto up = leaf->up;
 			while (up != nullptr)
