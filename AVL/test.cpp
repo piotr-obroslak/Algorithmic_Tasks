@@ -103,7 +103,13 @@ int main(int argc, char * argv[])
 						val.push_back(rand() % ('z'-'a') + 'a');
 					}
 				}
+				std::cout << "inserting @ " << key << "... ";
 				t.insert({key, val});
+				std::cout << "done." << std::endl;
+
+				std::stringstream fname; fname << "test" << i+1 << ".dot";
+				DotWriter w(t, fname.str().c_str());
+				t.traverse_in_order(w);
 			}
 
 			std::cout << "done!" << std::endl;

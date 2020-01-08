@@ -184,6 +184,8 @@ class AVLTree
 
 		void rotate_right(Node * top)
 		{
+			std::cout << "performing right rotation" << std::endl;
+
 			auto upup = top->up;
 			auto l = top->left.get();
 
@@ -191,52 +193,50 @@ class AVLTree
 
 			if (upup == nullptr)
 			{
-				std::cout << "we're @ root" << std::endl;
 				root.release();
 				root.reset(l);
 			}
 			else
 			{
-				std::cout << "we're not @ root" << std::endl;
-				upup->left.release();	// TODO: wr're not sure if that's left or right
-				upup->left.reset(l);
+				if (upup->left.get() == top)
+				{
+					upup->left.release();
+					upup->left.reset(l);
+				}
+				else if (upup->right.get() == top)
+				{
+					upup->right.release();
+					upup->right.reset(l);
+				}
 			}
+
+			l->up = upup;
 			
-			l->right.release();
+			auto orphaned = l->right.release();
 			l->right.reset(top);
 			top->up = l;
 
-			l->up = upup;
 
 			top->left.release();
+			top->left.reset(orphaned);
+			if (orphaned != nullptr)
+			{
+				orphaned->up = top->left.get();
+			}
 
-			std::cout << "it is not about rotation" << std::endl;
-
-			
 			top->ht = std::max(get_height(top->left.get()), get_height(top->right.get())) + 1;
 			l->ht = std::max(get_height(l->left.get()), get_height(l->right.get())) + 1;
-			if (upup != nullptr)
+			while (upup != nullptr)
 			{
 				upup->ht = std::max(get_height(upup->left.get()), get_height(upup->right.get())) + 1;
+				upup = upup->up;
 			}
 			
-
-			/*up->up = child;
-			auto r = child->right.release();
-			child->right.reset(up);
-
-			r->up = up;
-			up->left.release();
-			up->left.reset(r);
-			up->ht = std::max(get_height(up->left.get()), get_height(up->right.get())) + 1;
-			child->ht = std::max(get_height(child->left.get()), get_height(child->right.get())) + 1;
-			upup->ht = std::max(get_height(upup->left.get()), get_height(upup->right.get())) + 1;
-*/
 		}
 
 		void balance(Node * leaf)
 		{
-			//return;
+			return;
 
 			// NOTE: it is assumed this method is only called for newly added leaf nodes
 
@@ -263,20 +263,15 @@ class AVLTree
 
 					auto myself = up;
 
-					std::cout << "myself: " << "{" << myself->first << "," << myself->second << "}" << std::endl;
-					std::cout << "left ht: " << l_ht << " right ht: " << r_ht << std::endl;
+					//std::cout << "myself: " << "{" << myself->first << "," << myself->second << "}" << std::endl;
+					//std::cout << "left ht: " << l_ht << " right ht: " << r_ht << std::endl;
 
 					if (l_ht > r_ht)
 					{
-
-						std::cout << "left child:" << "{" << l->first << "," << l->second << "}" << std::endl;
-						
 						auto ll = l->left.get();
 						auto lr = l->right.get();
 						const auto ll_ht = get_height(ll);
 						const auto lr_ht = get_height(lr);
-
-						std::cout << "left left ht: " << ll_ht << " left right ht: " << lr_ht << std::endl;
 
 						if (ll_ht > lr_ht)
 						{
@@ -284,8 +279,8 @@ class AVLTree
 						}
 						else if (lr_ht > ll_ht)
 						{
-							rotate_left(l);
-							rotate_right(myself);
+							//rotate_left(l);
+							//rotate_right(myself);
 						}
 					}
 					else if (r_ht > l_ht)
@@ -295,12 +290,12 @@ class AVLTree
 
 						if (rl_ht > rr_ht)
 						{
-							rotate_right(r);
-							rotate_left(myself);
+							//rotate_right(r);
+							//rotate_left(myself);
 						}
 						else if (rr_ht > rl_ht)
 						{
-							rotate_left(myself);
+							//rotate_left(myself);
 						}
 					}
 					
