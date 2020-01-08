@@ -25,7 +25,7 @@ class AVLTree
 				mapped_type & second = val;
 				
 				long height() const { return ht; }
-				//const Node * parent() const { return up; }
+				const Node * parent() const { return up; }
 
 			private:
 				Node(Node * p, const value_type & keyval)
@@ -180,70 +180,101 @@ class AVLTree
 
 		void rotate_left(Node * top)
 		{
+			//std::cout << "performing left rotation" << std::endl;
+
+			auto topup = top->up;
+			auto r = top->right.get();
+
+			if (topup  == nullptr)
+			{
+				root.release();
+				root.reset(r);
+			}
+			else
+			{
+				if (topup->right.get() == top)
+				{
+					topup->right.release();
+					topup->right.reset(r);
+				}
+				else if (topup->left.get() == top)
+				{
+					topup->left.release();
+					topup->left.reset(r);
+				}
+			}
+			r->up = topup;
+
+			auto orphaned = r->left.release();
+			r->left.reset(top);
+			top->up = r;
+
+			/*auto adoptor =*/ top->right.release();
+			top->right.reset(orphaned);
+			if (orphaned != nullptr)
+			{
+				orphaned->up = top;
+			}
+
+			top->ht = std::max(get_height(top->left.get()), get_height(top->right.get())) + 1;
+			r->ht = std::max(get_height(r->left.get()), get_height(r->right.get())) + 1;
+			while (topup != nullptr)
+			{
+				topup->ht = std::max(get_height(topup->left.get()), get_height(topup->right.get())) + 1;
+				topup = topup->up;
+			}
 		}
 
 		void rotate_right(Node * top)
 		{
-			std::cout << "performing right rotation" << std::endl;
+			//std::cout << "performing right rotation" << std::endl;
 
-			auto upup = top->up;
+			auto topup = top->up;
 			auto l = top->left.get();
 
-			l->up = upup;
-
-			if (upup == nullptr)
+			if (topup == nullptr)
 			{
 				root.release();
 				root.reset(l);
 			}
 			else
 			{
-				if (upup->left.get() == top)
+				if (topup->left.get() == top)
 				{
-					upup->left.release();
-					upup->left.reset(l);
+					topup->left.release();
+					topup->left.reset(l);
 				}
-				else if (upup->right.get() == top)
+				else if (topup->right.get() == top)
 				{
-					upup->right.release();
-					upup->right.reset(l);
+					topup->right.release();
+					topup->right.reset(l);
 				}
 			}
+			l->up = topup;
 
-			l->up = upup;
-			
 			auto orphaned = l->right.release();
 			l->right.reset(top);
 			top->up = l;
 
-
-			top->left.release();
+			/*auto adoptor =*/ top->left.release();
 			top->left.reset(orphaned);
 			if (orphaned != nullptr)
 			{
-				orphaned->up = top->left.get();
+				orphaned->up = top;
 			}
 
 			top->ht = std::max(get_height(top->left.get()), get_height(top->right.get())) + 1;
 			l->ht = std::max(get_height(l->left.get()), get_height(l->right.get())) + 1;
-			while (upup != nullptr)
+			while (topup != nullptr)
 			{
-				upup->ht = std::max(get_height(upup->left.get()), get_height(upup->right.get())) + 1;
-				upup = upup->up;
+				topup->ht = std::max(get_height(topup->left.get()), get_height(topup->right.get())) + 1;
+				topup = topup->up;
 			}
-			
 		}
 
 		void balance(Node * leaf)
 		{
-			return;
-
 			// NOTE: it is assumed this method is only called for newly added leaf nodes
-
-			// TODO: height balancing - traverse the tree up (to the very root in extreme
-			// case to see if any node on the traverse path got disbalanced after the 
-			// insertion)
-
 
 			auto up = leaf->up;
 			while (up != nullptr)
@@ -279,23 +310,25 @@ class AVLTree
 						}
 						else if (lr_ht > ll_ht)
 						{
-							//rotate_left(l);
-							//rotate_right(myself);
+							rotate_left(l);
+							rotate_right(myself);
 						}
 					}
 					else if (r_ht > l_ht)
 					{
-						const auto rl_ht = get_height(up->right->left.get());
-						const auto rr_ht = get_height(up->right->right.get());
+						auto rr = r->right.get();
+						auto rl = r->left.get();
+						const auto rl_ht = get_height(rl);
+						const auto rr_ht = get_height(rr);
 
 						if (rl_ht > rr_ht)
 						{
-							//rotate_right(r);
-							//rotate_left(myself);
+							rotate_right(r);
+							rotate_left(myself);
 						}
 						else if (rr_ht > rl_ht)
 						{
-							//rotate_left(myself);
+							rotate_left(myself);
 						}
 					}
 					

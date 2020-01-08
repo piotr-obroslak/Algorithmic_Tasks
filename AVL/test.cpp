@@ -36,7 +36,7 @@ int main(int argc, char * argv[])
 	class DotWriter
 	{
 		public:
-			DotWriter(TestTree & tr, const char * fname = "test.dot")
+			DotWriter(TestTree & tr, const char * fname = "demo.dot")
 				: t(tr)
 				, dot(fname)
 			{
@@ -54,11 +54,12 @@ int main(int argc, char * argv[])
 				if (it != t.end())
 				{
 					dot << '\t' << it << '[' <<  "label=" << '\"' << it->first << "\\n" << it->second ;
-					//auto parent = it->parent();
-					//if (parent != nullptr)
-					//{
-						dot << "\\n" << it->height();
-					//}
+					auto parent = it->parent();
+					if (parent != nullptr)
+					{
+						dot << "\\n" << parent->first;
+					}
+					dot << "\\n" << it->height();
 				   	dot << '\"' << ']' << '\n';
 					add_edge(it, t.left(it));
 					add_edge(it, t.right(it));
@@ -103,13 +104,13 @@ int main(int argc, char * argv[])
 						val.push_back(rand() % ('z'-'a') + 'a');
 					}
 				}
-				std::cout << "inserting @ " << key << "... ";
+				//std::cout << "inserting @ " << key << "... ";
 				t.insert({key, val});
-				std::cout << "done." << std::endl;
+				//std::cout << "done." << std::endl;
 
-				std::stringstream fname; fname << "test" << i+1 << ".dot";
-				DotWriter w(t, fname.str().c_str());
-				t.traverse_in_order(w);
+				//std::stringstream fname; fname << "demo" << i+1 << ".dot";
+				//DotWriter w(t, fname.str().c_str());
+				//t.traverse_in_order(w);
 			}
 
 			std::cout << "done!" << std::endl;
@@ -122,11 +123,13 @@ int main(int argc, char * argv[])
 			{
 				const auto key = atoi(argv[2*i+1]);
 				const auto val = std::string(argv[2*i+2]);
+				//std::cout << "inserting @ " << key << "... ";
 				t.insert({key, val});
+				//std::cout << "done." << std::endl;
 
-				std::stringstream fname; fname << "test" << i+1 << ".dot";
-				DotWriter w(t, fname.str().c_str());
-				t.traverse_in_order(w);
+				//std::stringstream fname; fname << "demo" << i+1 << ".dot";
+				//DotWriter w(t, fname.str().c_str());
+				//t.traverse_in_order(w);
 			}
 
 			std::cout << "done!" << std::endl;
