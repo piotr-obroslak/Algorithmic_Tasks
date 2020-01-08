@@ -175,43 +175,43 @@ class AVLTree
 	protected:
 		void rotate_left(Node * top)
 		{
-									auto upup = top->up;
-									auto l = top->left.get();
+			auto upup = top->up;
+			auto l = top->left.get();
 
-									l->up = upup;
+			l->up = upup;
 
-									if (upup == nullptr)
-									{
-										std::cout << "we're @ root" << std::endl;
-										l->right.release();
-										l->right.reset(top);
-										top->up = l;
+			if (upup == nullptr)
+			{
+				std::cout << "we're @ root" << std::endl;
+				l->right.release();
+				l->right.reset(top);
+				top->up = l;
 
-										root.release();
-										root.reset(l);
+				root.release();
+				root.reset(l);
 
-										l->up = upup;
+				l->up = upup;
 
-										top->left.release();
+				top->left.release();
 
-										std::cout << "it is not about rotation" << std::endl;
-									}
-									else
-									{
-										upup->left.release();	// TODO: wr're not sure if that's left or right
-										upup->left.reset(l);
-									}
+				std::cout << "it is not about rotation" << std::endl;
+			}
+			else
+			{
+				upup->left.release();	// TODO: wr're not sure if that's left or right
+				upup->left.reset(l);
+			}
 
-									/*up->up = child;
-									auto r = child->right.release();
-									child->right.reset(up);
+			/*up->up = child;
+			auto r = child->right.release();
+			child->right.reset(up);
 
-									r->up = up;
-									up->left.release();
-									up->left.reset(r);
-									up->ht = std::max(get_height(up->left.get()), get_height(up->right.get())) + 1;
-									child->ht = std::max(get_height(child->left.get()), get_height(child->right.get())) + 1;
-									upup->ht = std::max(get_height(upup->left.get()), get_height(upup->right.get())) + 1;
+			r->up = up;
+			up->left.release();
+			up->left.reset(r);
+			up->ht = std::max(get_height(up->left.get()), get_height(up->right.get())) + 1;
+			child->ht = std::max(get_height(child->left.get()), get_height(child->right.get())) + 1;
+			upup->ht = std::max(get_height(upup->left.get()), get_height(upup->right.get())) + 1;
 */
 		}
 
@@ -224,84 +224,83 @@ class AVLTree
 			return;
 
 			// NOTE: it is assumed this method is only called for newly added leaf nodes
+
+			// TODO: height balancing - traverse the tree up (to the very root in extreme
+			// case to see if any node on the traverse path got disbalanced after the 
+			// insertion)
+
+			const auto get_height =
+				[](const Node * n) { return (n != nullptr) ? n->ht : -1L; };
+
+			auto up = leaf->up;
+			while (up != nullptr)
+			{
+				auto l = up->left.get();
+				auto r = up->right.get();
+				const auto l_ht = get_height(l);
+				const auto r_ht = get_height(r);
+				const auto d_ht = abs(l_ht -  r_ht);
+
+				if (d_ht < 2)
 				{
-					// TODO: height balancing - traverse the tree up (to the very root in extreme
-					// case to see if any node on the traverse path got disbalanced after the 
-					// insertion)
-
-					const auto get_height =
-						[](const Node * n) { return (n != nullptr) ? n->ht : -1L; };
-
-					auto up = leaf->up;
-					while (up != nullptr)
-					{
-						auto l = up->left.get();
-						auto r = up->right.get();
-						const auto l_ht = get_height(l);
-						const auto r_ht = get_height(r);
-						const auto d_ht = abs(l_ht -  r_ht);
-
-						if (d_ht < 2)
-						{
-						}
-						else if (d_ht == 2)
-						{
-							// TODO: balance the node
-
-							auto myself = up;
-
-							std::cout << "myself: " << "{" << myself->first << "," << myself->second << "}" << std::endl;
-							std::cout << "left ht: " << l_ht << " right ht: " << r_ht << std::endl;
-
-							if (l_ht > r_ht)
-							{
-
-								std::cout << "left child:" << "{" << l->first << "," << l->second << "}" << std::endl;
-								
-								auto ll = l->left.get();
-								auto lr = l->right.get();
-								const auto ll_ht = get_height(ll);
-								const auto lr_ht = get_height(lr);
-
-								std::cout << "left left ht: " << ll_ht << " left right ht: " << lr_ht << std::endl;
-
-								if (ll_ht > lr_ht)
-								{
-									rotate_right(myself);
-								}
-								else if (lr_ht > ll_ht)
-								{
-									rotate_left(l);
-									rotate_right(myself);
-								}
-							}
-							else if (r_ht > l_ht)
-							{
-								const auto rl_ht = get_height(up->right->left.get());
-								const auto rr_ht = get_height(up->right->right.get());
-
-								if (rl_ht > rr_ht)
-								{
-									rotate_right(r);
-									rotate_left(myself);
-								}
-								else if (rr_ht > rl_ht)
-								{
-									rotate_left(myself);
-								}
-							}
-							
-							break;
-						}
-						else
-						{
-							// TODO: I'll uncomment once I'm sure the tree is balanced
-							//throw Exception("something overseen!");
-						}
-
-						up = up->up;
-					}
 				}
+				else if (d_ht == 2)
+				{
+					// TODO: balance the node
+
+					auto myself = up;
+
+					std::cout << "myself: " << "{" << myself->first << "," << myself->second << "}" << std::endl;
+					std::cout << "left ht: " << l_ht << " right ht: " << r_ht << std::endl;
+
+					if (l_ht > r_ht)
+					{
+
+						std::cout << "left child:" << "{" << l->first << "," << l->second << "}" << std::endl;
+						
+						auto ll = l->left.get();
+						auto lr = l->right.get();
+						const auto ll_ht = get_height(ll);
+						const auto lr_ht = get_height(lr);
+
+						std::cout << "left left ht: " << ll_ht << " left right ht: " << lr_ht << std::endl;
+
+						if (ll_ht > lr_ht)
+						{
+							rotate_right(myself);
+						}
+						else if (lr_ht > ll_ht)
+						{
+							rotate_left(l);
+							rotate_right(myself);
+						}
+					}
+					else if (r_ht > l_ht)
+					{
+						const auto rl_ht = get_height(up->right->left.get());
+						const auto rr_ht = get_height(up->right->right.get());
+
+						if (rl_ht > rr_ht)
+						{
+							rotate_right(r);
+							rotate_left(myself);
+						}
+						else if (rr_ht > rl_ht)
+						{
+							rotate_left(myself);
+						}
+					}
+					
+					break;
+				}
+				else
+				{
+					// TODO: I'll uncomment once I'm sure the tree is balanced
+					//throw Exception("something overseen!");
+				}
+
+				up = up->up;
+			}
 
 		}
 
