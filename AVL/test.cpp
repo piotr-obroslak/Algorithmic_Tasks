@@ -118,7 +118,7 @@ int main(int argc, char * argv[])
 				const auto val = std::string(argv[2*i+2]);
 				t.insert({key, val});
 
-				std::stringstream fname; fname << "test" << i << ".dot";
+				std::stringstream fname; fname << "test" << i+1 << ".dot";
 				DotWriter w(t, fname.str().c_str());
 				t.traverse_in_order(w);
 			}
@@ -126,9 +126,12 @@ int main(int argc, char * argv[])
 			std::cout << "done!" << std::endl;
 		}
 
+		{
+			DotWriter w(t, "demo.dot");
+			t.traverse_in_order(w);
+		}
 		//t.traverse_in_order(dumper);
-		//t.traverse_in_order(writer);
-		//std::cout << std::endl;
+		std::cout << std::endl;
 	}
 	catch (const TestTree::Exception & e)
 	{

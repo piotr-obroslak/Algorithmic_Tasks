@@ -13,6 +13,7 @@ class AVLTree
 		using key_compare = _Pr;
 
 		class Iterator;
+
 	protected:
 		class Node
 		{
@@ -147,7 +148,82 @@ class AVLTree
 					}
 					up = up->up;
 				}
-#if 0
+
+				balance(the_new_one);
+
+				return std::make_pair(it, true);
+			}
+			catch (std::exception & e)
+			{
+				throw Exception(e.what());
+			}
+		}
+
+		//Iterator find(const key_type & key);
+		Iterator begin() { return Iterator(this, root); }
+		Iterator end() { return Iterator(this, toor); }
+
+		Iterator left(Iterator it) const { return Iterator(this, it->left); }
+		Iterator right(Iterator it) const { return Iterator(this, it->right); }
+		
+		template<typename _Visitor>
+		void traverse_in_order(_Visitor & consumer)
+		{
+			return traverse_in_order_recursively(begin(), consumer);
+		}
+
+	protected:
+		void rotate_left(Node * top)
+		{
+									auto upup = top->up;
+									auto l = top->left.get();
+
+									l->up = upup;
+
+									if (upup == nullptr)
+									{
+										std::cout << "we're @ root" << std::endl;
+										l->right.release();
+										l->right.reset(top);
+										top->up = l;
+
+										root.release();
+										root.reset(l);
+
+										l->up = upup;
+
+										top->left.release();
+
+										std::cout << "it is not about rotation" << std::endl;
+									}
+									else
+									{
+										upup->left.release();	// TODO: wr're not sure if that's left or right
+										upup->left.reset(l);
+									}
+
+									/*up->up = child;
+									auto r = child->right.release();
+									child->right.reset(up);
+
+									r->up = up;
+									up->left.release();
+									up->left.reset(r);
+									up->ht = std::max(get_height(up->left.get()), get_height(up->right.get())) + 1;
+									child->ht = std::max(get_height(child->left.get()), get_height(child->right.get())) + 1;
+									upup->ht = std::max(get_height(upup->left.get()), get_height(upup->right.get())) + 1;
+*/
+		}
+
+		void rotate_right(Node * top)
+		{
+		}
+
+		void balance(Node * leaf)
+		{
+			return;
+
+			// NOTE: it is assumed this method is only called for newly added leaf nodes
 				{
 					// TODO: height balancing - traverse the tree up (to the very root in extreme
 					// case to see if any node on the traverse path got disbalanced after the 
@@ -156,7 +232,7 @@ class AVLTree
 					const auto get_height =
 						[](const Node * n) { return (n != nullptr) ? n->ht : -1L; };
 
-					auto up = the_new_one->up;
+					auto up = leaf->up;
 					while (up != nullptr)
 					{
 						auto l = up->left.get();
@@ -181,7 +257,7 @@ class AVLTree
 							{
 
 								std::cout << "left child:" << "{" << l->first << "," << l->second << "}" << std::endl;
-
+								
 								auto ll = l->left.get();
 								auto lr = l->right.get();
 								const auto ll_ht = get_height(ll);
@@ -191,46 +267,12 @@ class AVLTree
 
 								if (ll_ht > lr_ht)
 								{
-									auto upup = myself->up;
-
-									l->up = upup;
-
-									if (upup == nullptr)
-									{
-										std::cout << "we're @ root" << std::endl;
-										l->right.release();
-										l->right.reset(myself);
-										myself->up = l;
-
-										root.release();
-										root.reset(l);
-
-										l->up = upup;
-
-										myself->left.release();
-
-										std::cout << "it is not about rotation" << std::endl;
-									}
-									else
-									{
-										upup->left.release();	// TODO: wr're not sure if that's left or right
-										upup->left.reset(l);
-									}
-
-									/*up->up = child;
-									auto r = child->right.release();
-									child->right.reset(up);
-
-									r->up = up;
-									up->left.release();
-									up->left.reset(r);
-									up->ht = std::max(get_height(up->left.get()), get_height(up->right.get())) + 1;
-									child->ht = std::max(get_height(child->left.get()), get_height(child->right.get())) + 1;
-									upup->ht = std::max(get_height(upup->left.get()), get_height(upup->right.get())) + 1;
-*/
+									rotate_right(myself);
 								}
 								else if (lr_ht > ll_ht)
 								{
+									rotate_left(l);
+									rotate_right(myself);
 								}
 							}
 							else if (r_ht > l_ht)
@@ -240,9 +282,12 @@ class AVLTree
 
 								if (rl_ht > rr_ht)
 								{
+									rotate_right(r);
+									rotate_left(myself);
 								}
 								else if (rr_ht > rl_ht)
 								{
+									rotate_left(myself);
 								}
 							}
 							
@@ -258,30 +303,8 @@ class AVLTree
 					}
 				}
 
-#endif
-
-				return std::make_pair(it, true);
-			}
-			catch (std::exception & e)
-			{
-				throw Exception(e.what());
-			}
 		}
 
-		//Iterator find(const key_type & key);
-		Iterator begin() { return Iterator(this, root); }
-		Iterator end() { return Iterator(this, toor); }
-
-		Iterator left(Iterator it) const { return Iterator(this, it->left); }
-		Iterator right(Iterator it) const { return Iterator(this, it->right); }
-		
-		template<typename _Visitor>
-		void traverse_in_order(_Visitor & consumer)
-		{
-			return traverse_in_order_recursively(begin(), consumer);
-		}
-
-	protected:
 		template<typename _Visitor>
 		void traverse_in_order_recursively(Iterator it, _Visitor & consumer)
 		{
