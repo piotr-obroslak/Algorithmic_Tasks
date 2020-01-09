@@ -56,7 +56,7 @@ int main(int argc, char * argv[])
 				if (it != t.end())
 				{
 					dot << '\t' << it << '[' <<  "label=" << '\"' << it->first << "\\n" << it->second ;
-					dot << "\\n" << it->height();
+					//dot << "\\n" << it->height();
 				   	dot << '\"' << ']' << '\n';
 					add_edge(it, t.left(it));
 					add_edge(it, t.right(it));
@@ -92,6 +92,7 @@ int main(int argc, char * argv[])
 			for (auto i = 0; i<size; i++)
 			{
 				const auto key = rand() % (4 * size) - (2 * size);
+				//const auto key = i + 1;
 				std::string val;
 				{
 					const auto val_len = rand() % 5 + 1;
