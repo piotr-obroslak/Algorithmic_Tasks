@@ -2,7 +2,7 @@
 
 Implementation of a generic key->value AVL tree just to get familiar with the concept in practice. No recurrence is used in the insert procedure, I use a binding between a node and its parent & upward traversal instead because:
   1. recurrence is costly
-  2. the is a plenty of example implementations of the AVL tree insert in pseudo code so copying/re-doig them was not challenging enough
+  2. the is a plenty of example implementations of the recursive AVL tree insert in pseudo code so copying/re-doig them was not challenging enough
 
 The test app produces a tree with signed integer keys and string values. It works in one of the tree modes:
   1. ./test - generates a tree with random size and random values
