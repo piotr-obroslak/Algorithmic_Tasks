@@ -25,7 +25,6 @@ class AVLTree
 				mapped_type & second = val;
 				
 				long height() const { return ht; }
-				const Node * parent() const { return up; }
 
 			private:
 				Node(Node * p, const value_type & keyval)
@@ -72,7 +71,7 @@ class AVLTree
 					return tree->toor.get();
 				}
 
-				bool operator==(const Iterator & that) const { return !(this != that); }
+				bool operator==(const Iterator & that) const { return !(*this != that); }
 				bool operator!=(const Iterator & that) const
 				{
 					if (this->tree == nullptr || that.tree == nullptr)
@@ -159,7 +158,40 @@ class AVLTree
 			}
 		}
 
-		//Iterator find(const key_type & key);
+		Iterator find(const key_type & key)
+		{
+			// TODO: identical code snippet appears in insert
+
+			const auto comparator = key_compare();
+
+			Iterator it = begin();
+			while (it != end())
+			{
+				const auto less = comparator(it->first, key);
+				const auto greeter = comparator(key, it->first);
+
+				if (less && greeter)
+				{
+					throw Exception("invalid comparator!");
+				}
+
+				if (less)
+				{
+					it = right(it);
+				}
+				else if (greeter)
+				{
+					it = left(it);
+				}
+				else
+				{
+					return it;
+				}
+			}
+
+			return end();
+		}
+
 		Iterator begin() { return Iterator(this, root); }
 		Iterator end() { return Iterator(this, toor); }
 
@@ -290,12 +322,7 @@ class AVLTree
 				}
 				else if (d_ht == 2)
 				{
-					// TODO: balance the node
-
 					auto myself = up;
-
-					//std::cout << "myself: " << "{" << myself->first << "," << myself->second << "}" << std::endl;
-					//std::cout << "left ht: " << l_ht << " right ht: " << r_ht << std::endl;
 
 					if (l_ht > r_ht)
 					{
@@ -336,8 +363,7 @@ class AVLTree
 				}
 				else
 				{
-					// TODO: I'll uncomment once I'm sure the tree is balanced
-					//throw Exception("something overseen!");
+					throw Exception("something overseen!");
 				}
 
 				up = up->up;

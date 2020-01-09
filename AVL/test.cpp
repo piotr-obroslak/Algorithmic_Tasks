@@ -1,11 +1,13 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <vector>
 #include "AVL_tree.h"
 
-using TestTree = AVLTree<int, std::string>;
+using Map = AVLTree<int, std::string>;
 
-static std::ostream& operator<<(std::ostream & o, TestTree::Iterator & it)
+static std::ostream& operator<<(std::ostream & o, Map::Iterator & it)
 {
 	// TOOD: the itretor must be valid
 	const auto key = it->first;
@@ -27,16 +29,16 @@ int main(int argc, char * argv[])
 	class NodeDumper
 	{
 		public:
-			void operator()(TestTree::Iterator it)
+			void operator()(Map::Iterator it)
 			{
-				std::cout << '{' <<it->first << ',' << it->second << '}' << ", ";
+				std::cout << '\t' << '{' <<it->first << ',' << it->second << '}' << '\n';
 			}
 	};
 
 	class DotWriter
 	{
 		public:
-			DotWriter(TestTree & tr, const char * fname = "demo.dot")
+			DotWriter(Map & tr, const char * fname = "demo.dot")
 				: t(tr)
 				, dot(fname)
 			{
@@ -48,17 +50,12 @@ int main(int argc, char * argv[])
 				dot << "}\n";
 			}
 
-			void operator()(TestTree::Iterator it)
+			void operator()(Map::Iterator it)
 			{
 				//std::cout << "consuming" << it << std::endl;
 				if (it != t.end())
 				{
 					dot << '\t' << it << '[' <<  "label=" << '\"' << it->first << "\\n" << it->second ;
-					auto parent = it->parent();
-					if (parent != nullptr)
-					{
-						dot << "\\n" << parent->first;
-					}
 					dot << "\\n" << it->height();
 				   	dot << '\"' << ']' << '\n';
 					add_edge(it, t.left(it));
@@ -67,7 +64,7 @@ int main(int argc, char * argv[])
 			}
 
 		private:
-			void add_edge (TestTree::Iterator source, TestTree::Iterator target)
+			void add_edge (Map::Iterator source, Map::Iterator target)
 			{
 				if (source != t.end() && target != t.end())
 				{
@@ -75,23 +72,22 @@ int main(int argc, char * argv[])
 				}
 			};
 
-			TestTree & t;
+			Map & t;
 			std::ofstream dot;
 	};
 	
 	try
 	{
-
-		TestTree t;
-
 		srand(time(0));
+
+		std::vector<Map::value_type> values;
+
+
 
 		if (argc < 3)
 		{
 			const auto max_size = 100000;
 			const auto size = (argc == 1) ? rand() % max_size : atoi(argv[1]);
-
-			std::cout << "creating a random AVL tree with " << size << " nodes..." << std::endl;
 
 			for (auto i = 0; i<size; i++)
 			{
@@ -104,45 +100,98 @@ int main(int argc, char * argv[])
 						val.push_back(rand() % ('z'-'a') + 'a');
 					}
 				}
-				//std::cout << "inserting @ " << key << "... ";
-				t.insert({key, val});
-				//std::cout << "done." << std::endl;
-
-				//std::stringstream fname; fname << "demo" << i+1 << ".dot";
-				//DotWriter w(t, fname.str().c_str());
-				//t.traverse_in_order(w);
+				values.push_back({key, val});
 			}
-
-			std::cout << "done!" << std::endl;
 		}
 		else
 		{
-			std::cout << "creating an AVL tree from the " << (argc - 1) / 2 << " specified nodes...\n";
-
 			for (auto i = 0; i<argc/2; i++)
 			{
 				const auto key = atoi(argv[2*i+1]);
 				const auto val = std::string(argv[2*i+2]);
-				//std::cout << "inserting @ " << key << "... ";
-				t.insert({key, val});
-				//std::cout << "done." << std::endl;
+				values.push_back({key, val});
+			}
 
-				//std::stringstream fname; fname << "demo" << i+1 << ".dot";
-				//DotWriter w(t, fname.str().c_str());
-				//t.traverse_in_order(w);
+		}
+		
+		std::cout << "creating a random AVL tree with " << values.size() << " nodes..." << std::endl;
+		Map t;
+		for (const auto & value : values)
+		{
+			t.insert(value);
+		}
+		std::cout << "done!" << std::endl;
+		
+		std::cout << "the tree contents:\n";
+		NodeDumper d;
+		t.traverse_in_order(d);
+		std::cout << std::endl;
+
+
+		std::cout << "generating *.dot file for graphviz" << std::endl;
+		DotWriter w(t, "demo.dot");
+		t.traverse_in_order(w);
+		std::cout << "done!" << std::endl;
+
+		{
+			std::cout << "\nrunning some test..." << std::endl;
+
+			auto data_presence_test = [](const decltype(values) & data)
+			{
+				Map m;
+				for (const auto & val : data)
+				{
+					std::cout << "\t\t inserting @ " << val.first << "...";
+					m.insert(val);
+					std::cout << "   done." << std::endl;
+				}
+				std::cout << "\tdone!" << std::endl;
+
+				std::cout << "\t2. making sure all values are there..." << std::endl;
+				for (const auto & val : data)
+				{
+					const auto & key = val.first;
+					if (m.find(key) == m.end())
+					{
+						std::cout << "\t\tERROR: key " << key << " not found!" << std::endl;
+					}
+				}
+				std::cout << "\tdone!" << std::endl;
+			};
+
+			{
+				std::cout << "\t1. inserting the values in ascending order... " << std::endl;
+				{
+					decltype(values) vals(values);
+					std::sort(vals.begin(), vals.end(),
+						[](const Map::value_type & a, const Map::value_type & b){ return a.first < b.first;});
+
+					data_presence_test(vals);
+				}
+
+				std::cout << "\t1. inserting the values in descending order... " << std::endl;
+				{
+					decltype(values) vals(values);
+					std::sort(vals.begin(), vals.end(),
+						[](const Map::value_type & a, const Map::value_type & b){ return b.first < a.first; });
+
+					data_presence_test(vals);
+				}
+
+				std::cout << "\t1. inserting the values in random order... " << std::endl;
+				{
+					decltype(values) vals(values);
+					data_presence_test(vals);
+				}
 			}
 
 			std::cout << "done!" << std::endl;
 		}
 
-		{
-			DotWriter w(t, "demo.dot");
-			t.traverse_in_order(w);
-		}
 		//t.traverse_in_order(dumper);
 		std::cout << std::endl;
 	}
-	catch (const TestTree::Exception & e)
+	catch (const Map::Exception & e)
 	{
 		std::cout << "FAILURE: " << e.what() << std::endl;
 	}
